@@ -1,32 +1,32 @@
 class ApplicationController < ActionController::Base
-  helper_method :current_user, :logged_in?, :no_double_dipping
-  before_action :no_double_dipping, only: :homepage
+    skip_before_action :verify_authenticity_token
+    helper_method :logged_in?, :current_user, :authorized_user?, :logout!, :require_login
 
-#   def current_user
-#       User.find_by_id(session[:user_id])
-#   end
-
-  def logged_in?
-      if current_user
-        render json: {message: "current user is #{current_user}"}
-      else
-        render json: {message: "nah bro"}
+    def require_login
+      unless logged_in?
+        render json: {
+          message: "You must be logged in to access this section"
+        }
       end
-  end
+    end
 
-  def no_double_dipping
-      if current_user
-          render json: {message: "you're already logged in!!"}
-      else
-        render json: {message: "u good"}
-      end
-  end
-  
-private
+    def logged_in?
+      !!session[:user_id]
+    end
 
-  def current_user
-    @_current_user ||= session[:user_id] &&
-      User.find_by(id: session[:user_id])
-  end
+    def current_user
+        if session[:user_id]
+            @current_user = User.find_by(id: session[:user_id])
+        else
+            @current_user = nil
+        end
+    end
 
-end
+    def authorized_user?
+       @user == current_user
+     end
+
+    def logout!
+       session.clear
+     end
+  end

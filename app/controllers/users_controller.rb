@@ -1,22 +1,13 @@
 class UsersController < ApplicationController
-  before_action :logged_in?, only: [:index, :show, :destroy]
-  before_action :no_double_dipping, only: [:signup, :login]
+  skip_before_action :verify_authenticity_token
+  before_action :logged_in?, only: [:show, :destroy]
+  before_action :current_user
 
   def index
     user = User.find_by(id: session[:user_id])
     render json: {
         currentUser: user
     }
-  end
-
-  def signup
-    @user = User.new
-    render :layout => "homepage"
-  end
-
-  def login
-    @user = User.new
-    render :layout => "homepage"
   end
 
   def show
@@ -34,13 +25,12 @@ class UsersController < ApplicationController
   end
 
   def create_session
-    user = User.find_by(username: params[:session][:username])
-
-    if user && user.authenticate(params[:user][:password])
+    user = User.find_by(username: params[:username])
+    if user && user.authenticate(params[:password])
       session[:user_id] = user.id
       render json: {
               logged_in: true,
-              username: @user.username
+              username: user.username
             }
     else
       render json: { 

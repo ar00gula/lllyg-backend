@@ -1,13 +1,13 @@
 class SessionsController < ApplicationController
+  before_action :require_login, only: :destroy 
 
     def create
-        user = User.find_by(username: session_params[:username])
-        if user && user.authenticate(session_params[:password])
+        @user = User.find_by(username: session_params[:username])
+        if @user && @user.authenticate(session_params[:password])
             login!
-            # session[:user_id] = user.id
             render json: {
                 logged_in: true,
-                user: @user
+                username: @user.username
               }
         else
             render json: { 
@@ -26,7 +26,7 @@ class SessionsController < ApplicationController
         else
           render json: {
             logged_in: false,
-            message: 'no such user'
+            user: ''
           }
         end
     end
@@ -42,6 +42,6 @@ class SessionsController < ApplicationController
 end
 
 def session_params
-    params.require(:user).permit(:username, :email, :password)
+    params.require(:session).permit(:username, :email, :password)
   end
 

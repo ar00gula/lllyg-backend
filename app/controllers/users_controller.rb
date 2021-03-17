@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
-  
+  before_action :require_login, only: :index, :show 
+
     def index
       users = User.all
       render json: {
@@ -24,11 +25,13 @@ class UsersController < ApplicationController
     def create
         @user = User.new(user_params)
         if @user.save
-            login!
-            render json: {
-            status: :created,
-            user: @user
-            }
+            if login!
+              render json: {
+              status: :created,
+              username: @user.username,
+              logged_in: true
+              }
+            end
         else 
             render json: {
             status: 500,
@@ -40,6 +43,6 @@ end
     private
       
       def user_params
-        params.permit(:username, :email, :password, :password_confirmation)
+        params.permit(:username, :email, :password, :password_confirmation, :session)
       end
   end
